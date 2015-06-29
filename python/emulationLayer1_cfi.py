@@ -31,15 +31,15 @@ Layer1Digis = cms.EDProducer(
     debug = cms.bool(False)
 )
 
-CorrectedDigis = cms.EDProducer(
-    "RegionCorrection",
-    puMultCorrect = cms.bool(True), # PU corrections
-    applyCalibration = cms.bool(False), # region calibration (Work in Progress))
-    regionLSB = RCTConfigProducers.jetMETLSB,
-    egammaLSB = cms.double(1.0), # This has to correspond with the value from L1CaloEmThresholds
-    regionSF = regionSF_8TeV_data,
-    regionSubtraction = regionSubtraction_8TeV_data
-)
+#CorrectedDigis = cms.EDProducer(
+#    "RegionCorrection",
+#    puMultCorrect = cms.bool(True), # PU corrections
+#    applyCalibration = cms.bool(False), # region calibration (Work in Progress))
+#    regionLSB = RCTConfigProducers.jetMETLSB,
+#    egammaLSB = cms.double(1.0), # This has to correspond with the value from L1CaloEmThresholds
+#    regionSF = regionSF_8TeV_data,
+#    regionSubtraction = regionSubtraction_8TeV_data
+#)
 
 uctDigiStep = cms.Sequence(
     # Only do the digitization of objects that we care about

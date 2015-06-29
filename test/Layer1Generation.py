@@ -28,7 +28,7 @@ process.load('Configuration/StandardSequences/FrontierConditions_GlobalTag_cff')
 process.GlobalTag.globaltag = 'POSTLS161_V12::All'
 
 # Load emulation and RECO sequences
-process.load("L1Trigger.Layer-1-PatternGenerator.emulationLayer1MC_cfi")
+process.load("L1Trigger.Layer1PatternGenerator.emulationLayer1MC_cfi")
 
 # Load sequences
 process.load("Configuration.Geometry.GeometryIdeal_cff")
