@@ -22,6 +22,7 @@
 #include "CondFormats/L1TObjects/interface/L1CaloHcalScale.h"
 #include "CondFormats/DataRecord/interface/L1CaloHcalScaleRcd.h"
 #include <fstream>
+#include <iomanip>
 
 class Layer1Emulator : public edm::EDProducer {
 public:
@@ -50,16 +51,17 @@ public:
   void getGCTphi(const int iPhi, unsigned int &gctPhi);
   
 private:
-  edm::InputTag hcalDigis_;
-  edm::InputTag ecalDigis_;
+  edm::EDGetTokenT<HcalTrigPrimDigiCollection> hcalDigisToken_;
+  edm::EDGetTokenT<EcalTrigPrimDigiCollection> ecalDigisToken_;  
+
   int hcalValue_;
   int ecalValue_;
   bool debug_;
 };
 
 Layer1Emulator::Layer1Emulator(const edm::ParameterSet& pset) {
-  hcalDigis_ = pset.getParameter<edm::InputTag>("hcalDigis");
-  ecalDigis_ = pset.getParameter<edm::InputTag>("ecalDigis");
+  hcalDigisToken_ = consumes<HcalTrigPrimDigiCollection>(pset.getParameter<edm::InputTag>("hcalDigis"));
+  ecalDigisToken_ = consumes<EcalTrigPrimDigiCollection>(pset.getParameter<edm::InputTag>("ecalDigis"));
   hcalValue_ = pset.getUntrackedParameter<int>("hcalValue",0);
   ecalValue_ = pset.getUntrackedParameter<int>("ecalValue",0);
   debug_ = pset.exists("debug") ? pset.getParameter<bool>("debug") : false;
@@ -113,9 +115,8 @@ void Layer1Emulator::produce(edm::Event& evt, const edm::EventSetup& es) {
   bool foundEvent = false;
 
   //get ecal and hcal digis
-  if(evt.getByLabel(ecalDigis_, ecalTpgs))
-    if(evt.getByLabel(hcalDigis_, hcalTpgs)){
-
+  if(evt.getByToken(ecalDigisToken_, ecalTpgs))
+    if(evt.getByToken(hcalDigisToken_, hcalTpgs)){
       //output not needed since this is for creating txt files
       output->reserve(hcalTpgs->size());
 
