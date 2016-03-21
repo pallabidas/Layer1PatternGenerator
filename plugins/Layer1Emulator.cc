@@ -115,11 +115,8 @@ void Layer1Emulator::produce(edm::Event& evt, const edm::EventSetup& es) {
   bool foundEvent = false;
 
   //get ecal and hcal digis
-  std::cout << "getting ecal digis" << std::endl;
   if(evt.getByToken(ecalDigisToken_, ecalTpgs))
-    std::cout << "getting hcal digis" << std::endl;
     if(evt.getByToken(hcalDigisToken_, hcalTpgs)){
-      std::cout << "got digis" << std::endl;
       //output not needed since this is for creating txt files
       output->reserve(hcalTpgs->size());
 
