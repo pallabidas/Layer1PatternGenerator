@@ -14,17 +14,23 @@
 #include "FWCore/Framework/interface/Event.h"
 #include "FWCore/Framework/interface/EventSetup.h"
 #include "FWCore/ParameterSet/interface/ParameterSet.h"
-#include "FWCore/Framework/interface/EDProducer.h"
+#include "FWCore/Framework/interface/stream/EDProducer.h"
 #include "FWCore/Framework/interface/ESHandle.h"
 
 #include "DataFormats/HcalDigi/interface/HcalDigiCollections.h"
 #include "DataFormats/EcalDigi/interface/EcalDigiCollections.h"
-#include "CondFormats/L1TObjects/interface/L1CaloHcalScale.h"
-#include "CondFormats/DataRecord/interface/L1CaloHcalScaleRcd.h"
+//#include "CondFormats/L1TObjects/interface/L1CaloHcalScale.h"
+//#include "CondFormats/DataRecord/interface/L1CaloHcalScaleRcd.h"
+#include "CalibFormats/CaloTPG/interface/CaloTPGTranscoder.h"
+#include "CalibFormats/CaloTPG/interface/CaloTPGRecord.h"
+#include "FWCore/Utilities/interface/ESGetToken.h"
 #include <fstream>
 #include <iomanip>
+#include <iostream>
 
-class Layer1Emulator : public edm::EDProducer {
+using namespace std;
+
+class Layer1Emulator : public edm::stream::EDProducer<> {
 public:
   Layer1Emulator(const edm::ParameterSet& pset);
   virtual ~Layer1Emulator(){}
@@ -57,6 +63,8 @@ private:
   int hcalValue_;
   int ecalValue_;
   bool debug_;
+  edm::ESGetToken<CaloTPGTranscoder, CaloTPGRecord> decoderToken_;
+  //edm::ESGetToken<L1CaloHcalScale, L1CaloHcalScaleRcd> hcalScaleToken_;
 };
 
 Layer1Emulator::Layer1Emulator(const edm::ParameterSet& pset) {
@@ -66,6 +74,8 @@ Layer1Emulator::Layer1Emulator(const edm::ParameterSet& pset) {
   ecalValue_ = pset.getUntrackedParameter<int>("ecalValue",0);
   debug_ = pset.exists("debug") ? pset.getParameter<bool>("debug") : false;
   produces<HcalTrigPrimDigiCollection>();
+  decoderToken_ = esConsumes<CaloTPGTranscoder, CaloTPGRecord>();
+  //hcalScaleToken_ = esConsumes<L1CaloHcalScale, L1CaloHcalScaleRcd>();
 }
 void Layer1Emulator::produce(edm::Event& evt, const edm::EventSetup& es) {
 
@@ -92,15 +102,19 @@ void Layer1Emulator::produce(edm::Event& evt, const edm::EventSetup& es) {
     }
 
   //calculate gct phi for all
-  for(unsigned int iCTP7 = 0; iCTP7 < nCTP7s; iCTP7++){
+  for(int iCTP7 = 0; iCTP7 < nCTP7s; iCTP7++){
     getGCTphi(CTP7[iCTP7].iphi,CTP7[iCTP7].gctphi);
     std::cout<<"CTP7 iphi "<< CTP7[iCTP7].iphi<<"CTP7 gctiphi "<<CTP7[iCTP7].gctphi<<std::endl;
   }
 
-  edm::ESHandle<L1CaloHcalScale> hcalScale;
-  es.get<L1CaloHcalScaleRcd>().get(hcalScale);
+  //edm::ESHandle<L1CaloHcalScale> hcalScale;
+  //es.get<L1CaloHcalScaleRcd>().get(hcalScale);
+  //hcalScale = es.getHandle(hcalScaleToken_);
+  edm::ESHandle<CaloTPGTranscoder> decoder;
+  decoder = es.getHandle(decoderToken_);
   edm::Handle<HcalTrigPrimDigiCollection> hcalTpgs;
-  std::auto_ptr<HcalTrigPrimDigiCollection> output(new HcalTrigPrimDigiCollection);
+  //std::auto_ptr<HcalTrigPrimDigiCollection> output(new HcalTrigPrimDigiCollection);
+  std::unique_ptr<HcalTrigPrimDigiCollection> output(make_unique<HcalTrigPrimDigiCollection>());
   edm::Handle<EcalTrigPrimDigiCollection> ecalTpgs;
 
   std::fstream file;
@@ -112,7 +126,7 @@ void Layer1Emulator::produce(edm::Event& evt, const edm::EventSetup& es) {
 
   sprintf(fileName,"EventLocations.txt");
   fileLocations.open(fileName,std::fstream::in | std::fstream::out | std::fstream::app);
-  bool foundEvent = false;
+  //bool foundEvent = false;
 
   //get ecal and hcal digis
   if(evt.getByToken(ecalDigisToken_, ecalTpgs))
@@ -120,13 +134,13 @@ void Layer1Emulator::produce(edm::Event& evt, const edm::EventSetup& es) {
       //output not needed since this is for creating txt files
       output->reserve(hcalTpgs->size());
 
-      int tpgEt=0,tpgiEta=0,tpgiPhi=0;
+      //int tpgEt=0,tpgiEta=0,tpgiPhi=0;
       //Write the event!!
       file<<evt.id().run()<<":"<<evt.luminosityBlock()<<":"<<evt.id().event()<<std::endl;
       std::cout<< evt.id().run() << ":" <<evt.luminosityBlock()<<":"<<evt.id().event()<<std::endl;
       //file<<" tpgEt "<<tpgEt<<" tpgiEta "<<tpgiEta<<" tpgiPhi "<<tpgiPhi<<std::endl;
       
-      for(unsigned int iCTP7 = 0; iCTP7 < nCTP7s; iCTP7++){
+      for(int iCTP7 = 0; iCTP7 < nCTP7s; iCTP7++){
 	//each bram is 4 in iphi and 2 in ieta
 	int zside = CTP7[iCTP7].zside;
 	int iphi  = CTP7[iCTP7].iphi;
@@ -140,7 +154,7 @@ void Layer1Emulator::produce(edm::Event& evt, const edm::EventSetup& es) {
     }
   fileLocations.close();
   file.close();
-  evt.put(output);
+  evt.put(std::move(output), "Layer1Emulator");
 }
 
 
