@@ -13,18 +13,19 @@ from Configuration.StandardSequences.RawToDigi_Data_cff import *
 
 # Modify the HCAL TPGs according to the proposed HTR modification.  If the HCAL
 # is above a given energy threshold, set the MIP bit.
-hackHCALMIPs = cms.EDProducer(
-    "HcalTpgMipEmbedder",
-    src = cms.InputTag("hcalDigis"),
-    threshold = cms.double(3), # In GeV
-    rawThreshold = cms.uint32(3), # In TPG rank
-    cutOnRawBits = cms.bool(False), # What to cut on
-    
-)
+#hackHCALMIPs = cms.EDProducer(
+#    "HcalTpgMipEmbedder",
+#    src = cms.InputTag("hcalDigis"),
+#    threshold = cms.double(3), # In GeV
+#    rawThreshold = cms.uint32(3), # In TPG rank
+#    cutOnRawBits = cms.bool(False), # What to cut on
+#    
+#)
 
 Layer1Digis = cms.EDProducer(
     "Layer1Emulator",
-    hcalDigis = cms.InputTag("valHcalTriggerPrimitiveDigis"),
+    #hcalDigis = cms.InputTag("valHcalTriggerPrimitiveDigis"),
+    hcalDigis = cms.InputTag("hcalDigis"),
     ecalDigis = cms.InputTag("ecalDigis:EcalTriggerPrimitives"),
     hcalValue = cms.untracked.int32(40),
     ecalValue = cms.untracked.int32(40),

@@ -73,7 +73,8 @@ Layer1Emulator::Layer1Emulator(const edm::ParameterSet& pset) {
   hcalValue_ = pset.getUntrackedParameter<int>("hcalValue",0);
   ecalValue_ = pset.getUntrackedParameter<int>("ecalValue",0);
   debug_ = pset.exists("debug") ? pset.getParameter<bool>("debug") : false;
-  produces<HcalTrigPrimDigiCollection>();
+  //produces<HcalTrigPrimDigiCollection>();
+  produces<edm::SortedCollection<HcalTriggerPrimitiveDigi>>();
   decoderToken_ = esConsumes<CaloTPGTranscoder, CaloTPGRecord>();
   //hcalScaleToken_ = esConsumes<L1CaloHcalScale, L1CaloHcalScaleRcd>();
 }
@@ -114,7 +115,8 @@ void Layer1Emulator::produce(edm::Event& evt, const edm::EventSetup& es) {
   decoder = es.getHandle(decoderToken_);
   edm::Handle<HcalTrigPrimDigiCollection> hcalTpgs;
   //std::auto_ptr<HcalTrigPrimDigiCollection> output(new HcalTrigPrimDigiCollection);
-  std::unique_ptr<HcalTrigPrimDigiCollection> output(make_unique<HcalTrigPrimDigiCollection>());
+  //std::unique_ptr<HcalTrigPrimDigiCollection> output(make_unique<HcalTrigPrimDigiCollection>());
+  std::unique_ptr<edm::SortedCollection<HcalTriggerPrimitiveDigi>> output(make_unique<edm::SortedCollection<HcalTriggerPrimitiveDigi>>());
   edm::Handle<EcalTrigPrimDigiCollection> ecalTpgs;
 
   std::fstream file;
@@ -154,7 +156,8 @@ void Layer1Emulator::produce(edm::Event& evt, const edm::EventSetup& es) {
     }
   fileLocations.close();
   file.close();
-  evt.put(std::move(output), "Layer1Emulator");
+  //evt.put(std::move(output), "Layer1Emulator");
+  evt.put(std::move(output));
 }
 
 
@@ -192,11 +195,11 @@ bool Layer1Emulator::writeLink(char CTP7Name[7], int zside, int ietaIn, int iphi
   /* Current Implementation
    * TODO:Check filling
    * 
-   *            ieta 0     ieta 1
-   * iphi 0   hcalET[0]  hcalET[1]
-   * iphi 1   hcalET[2]  hcalET[3]
-   * iphi 2   hcalET[4]  hcalET[5]
-   * iphi 3   hcalET[6]  hcalET[7]
+   *            ieta      ieta+1
+   * iphi     hcalET[0]  hcalET[1]
+   * iphi+1   hcalET[2]  hcalET[3]
+   * iphi+2   hcalET[4]  hcalET[5]
+   * iphi+3   hcalET[6]  hcalET[7]
    */ 
   
   for(int iphi = iphiIn, index = 0; iphi < 4 + iphiIn; iphi++, index+=2 ){
